@@ -15,7 +15,7 @@ scriptTime = time.strftime("%Y-%m-%d--%H:%M")
 PATH = os.path.dirname(os.path.abspath(__file__))
 
 # Wing Controller info
-wlc_list = ["192.168.4.4"]
+wlc_list = ["<IP ADDRESS OR DNS NAME>","<IP ADDRESS OR DNS NAME>", "<IP ADDRESS OR DNS NAME>"]
 login = {"user":"<NAME>","password":"<PASSWORD>"}
 
 filename = "RadioTrafficInfo.json"
@@ -169,7 +169,7 @@ def load_json_file(filename):
         print(f"There was no file {filename}")
         debug_print(f"There was no file {filename}", "error")
         data = {}
-    
+
     if '10' in data:
         del data['10']
     for i in range( 9,0,-1):
@@ -177,7 +177,7 @@ def load_json_file(filename):
             data[str(i+1)] = data[str(i)]
     if '1' in data:
         del data['1']
-    
+
     return(data)
 
 
@@ -259,13 +259,19 @@ def main():
         print("This appears to be the first run. Please run again to compare packet counts")
         debug_print("First run, skipping comparison", "error")
         exit()
+
     last_list = ap_list['2']['data']
     current_list = ap_list['1']['data']
-  
-    #pprint(ap_list)
 
-    diff_tx = [k for k in current_list if current_list[k]['tx_pkts'] == last_list[k]['tx_pkts']]
-    diff_rx = ([k for k in current_list if current_list[k]['rx_pkts'] == last_list[k]['rx_pkts']])
+    #pprint(ap_list)
+    diff_tx = []
+    diff_rx = []
+    for k in current_list:
+        if k in last_list.keys():
+            if current_list[k]['tx_pkts'] == last_list[k]['tx_pkts']:
+                diff_tx.append(k) 
+            if current_list[k]['rx_pkts'] == last_list[k]['rx_pkts']:
+                diff_rx.append(k)
     diff_list = set(diff_tx + diff_rx)
     
     msg = 'radio, stagnant direction, previous time, recent time, previous tx pkts, recent tx pkts, previous rx pkts, recent rx pkts\n'

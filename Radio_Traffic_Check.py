@@ -14,7 +14,7 @@ scriptTime = time.strftime("%Y-%m-%d--%H:%M")
 
 PATH = os.path.dirname(os.path.abspath(__file__))
 
-# Wing Controller info
+#Wing Controller info
 wlc_list = ["<IP ADDRESS OR DNS NAME>","<IP ADDRESS OR DNS NAME>", "<IP ADDRESS OR DNS NAME>"]
 login = {"user":"<NAME>","password":"<PASSWORD>"}
 
@@ -128,7 +128,7 @@ def post_api_call(url, rf_domain=None, device=None, tokenheader=None):
         return(data['data'])
     else:
         log_msg = "{} returned code {}\n{}".format(url,data['return_code'],data['errors'])
-        raise ValueError("{}".format(data['errors']))
+        raise ValueError("{}".format(log_msg))
 
 def radio_stat_collector(url, wlc, domain, HEADERS, mp_queue):
     data = {}
@@ -137,19 +137,19 @@ def radio_stat_collector(url, wlc, domain, HEADERS, mp_queue):
         rawRadio = post_api_call(url, rf_domain=domain, tokenheader=HEADERS)
     except TypeError as e:
         debug_print(f"{str(e)} on {domain} - {wlc}", 'warning')
-        exit()
+        return(data)
     except ValueError as e:
         debug_print(f"{str(e)} - {wlc}", 'warning')
-        exit()
+        return(data)
     except:
         debug_print(f'UNKNOWN ERROR: Radio API Failed on {domain} - {wlc}', 'error')
-        exit()
+        return(data)
     for radio in rawRadio:
         name = radio['radio_alias']
         data[name]={}
         data[name]['tx_pkts']=radio['tx_pkts']
         data[name]['rx_pkts']=radio['rx_pkts']
-    mp_queue.put(data)
+    return(data)
 
 def load_json_file(filename):
     if not os.path.isdir(PATH+'/archive'):
@@ -219,27 +219,15 @@ def main():
         except:
             log_msg = (f"Failed to disconnect {HEADERS['cookie']}")
             debug_print(log_msg, 'error')
-        sizeofbatch = 100
+        sizeofbatch = 10
         for i in range(0, len(domainList), sizeofbatch):
             batch = domainList[i:i+sizeofbatch]
-            mp_queue = multiprocessing.Queue()
-            processes = []
             url = '{}/v1/act/login'.format(baseurl)
             auth_token = get_api_token(url)
             HEADERS['cookie']='auth_token={}'.format(auth_token)
             url = '{}/v1/stats/wireless/radio-stats'.format(baseurl)
             for domain in batch:
-                p = multiprocessing.Process(target=radio_stat_collector, args=(url, wlc, domain, HEADERS, mp_queue))
-                processes.append(p)
-                p.start()
-            for p in processes:
-                try:
-                    p.join()
-                    p.terminate()
-                except:
-                    debug_print("Error occurred in thread", "error")
-            mp_queue.put('STOP')
-            for ap in iter(mp_queue.get, 'STOP'):
+                ap = radio_stat_collector(url, wlc, domain, HEADERS, mp_queue='')
                 ap_list['1']['data'].update(ap)
             url = '{}/v1/act/logout'.format(baseurl)
             try:

@@ -31,5 +31,5 @@ stores any log information from the script
 2021-08-17 14:53:58: root - INFO - updated csv file
 ```
 ### Requirements
-Python3 is required for this script.
+Python 3.6 or higher is required for this script.
 The python requests module will need to be installed. If pip is installed, this can be done with pip install requests

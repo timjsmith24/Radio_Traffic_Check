@@ -15,7 +15,7 @@ scriptTime = time.strftime("%Y-%m-%d--%H:%M")
 PATH = os.path.dirname(os.path.abspath(__file__))
 
 # Wing Controller info
-wlc_list = ["<IP ADDRESS OR DNS NAME>","<IP ADDRESS OR DNS NAME>", "<IP ADDRESS OR DNS NAME>"]
+wlc_list = ["192.168.4.4"]
 login = {"user":"<NAME>","password":"<PASSWORD>"}
 
 filename = "RadioTrafficInfo.json"
@@ -53,7 +53,7 @@ def debug_print(msg, status):
 
 def get_api_token(url):
     try:
-        r = requests.get(url, headers=HEADERS, verify=False, auth=(login['user'], login['password']), timeout=3)
+        r = requests.get(url, headers=HEADERS, verify=False, auth=(login['user'], login['password']), timeout=8)
     except requests.ConnectionError as e:
         raise TypeError(f"Connection Error - {e}")
     except requests.exceptions.HTTPError as e:
@@ -68,7 +68,7 @@ def get_api_token(url):
 
 def close_api_session(url):
     try:
-        r = requests.post(url, headers=HEADERS, verify=False, timeout=3)
+        r = requests.post(url, headers=HEADERS, verify=False, timeout=8)
     except requests.ConnectionError as e:
         raise TypeError(f"Connection Error - {e}")
     except requests.exceptions.HTTPError as e:
@@ -103,7 +103,7 @@ def post_api_call(url, rf_domain=None, device=None, tokenheader=None):
     if tokenheader:
         HEADERS = tokenheader
     try:
-        r = requests.post(url, headers=HEADERS, data=payload, verify=False, timeout=10)
+        r = requests.post(url, headers=HEADERS, data=payload, verify=False, timeout=60)
     except requests.ConnectionError as e:
         raise TypeError(f"Connection Error - {e}")
     except requests.exceptions.HTTPError as e:
@@ -152,6 +152,10 @@ def radio_stat_collector(url, wlc, domain, HEADERS, mp_queue):
     mp_queue.put(data)
 
 def load_json_file(filename):
+    if not os.path.isdir(PATH+'/archive'):
+        os.makedirs(PATH+'/archive')
+        data = {}
+        return(data)
     if os.path.isfile(PATH+'/archive/'+filename):
         with open(PATH+'/archive/'+filename, 'r') as f:
             try:

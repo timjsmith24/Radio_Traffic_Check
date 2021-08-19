@@ -145,10 +145,11 @@ def radio_stat_collector(url, wlc, domain, HEADERS, mp_queue):
         debug_print(f'UNKNOWN ERROR: Radio API Failed on {domain} - {wlc}', 'error')
         return(data)
     for radio in rawRadio:
-        name = radio['radio_alias']
-        data[name]={}
-        data[name]['tx_pkts']=radio['tx_pkts']
-        data[name]['rx_pkts']=radio['rx_pkts']
+        if radio['radio_type'] != 'sensor':
+            name = radio['radio_alias']
+            data[name]={}
+            data[name]['tx_pkts']=radio['tx_pkts']
+            data[name]['rx_pkts']=radio['rx_pkts']
     return(data)
 
 def load_json_file(filename):
